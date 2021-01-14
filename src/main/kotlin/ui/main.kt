@@ -18,7 +18,7 @@ import icAppRounded
 
 fun main() {
     val viewModel = MainViewModel()
-    Window(size = IntSize(408, 700), icon = icAppRounded()) {
+    Window(title = "摸鱼鱼", size = IntSize(408, 700), icon = icAppRounded()) {
         AppManager.windows.forEach {
             it.window.isResizable = false
         }
