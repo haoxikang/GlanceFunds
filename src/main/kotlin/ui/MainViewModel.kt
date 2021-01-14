@@ -8,6 +8,7 @@ import internet.FundServiceImp
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import local.LocalSource
 import ov.FundRealTimeInfo
 import state.Resource
 import state.Status
@@ -15,14 +16,15 @@ import state.Status
 class MainViewModel {
     private var getFundListJob = Job()
     private var addFundJob = Job()
+    private val job = Job()
     private val fundRepository = FundRepository(FundServiceImp())
+    private val localSource = LocalSource()
 
     lateinit var stateText: MutableState<TextFieldValue>
     val name = mutableStateOf(Resource.loading<FundRealTimeInfo>(null))
-    val isShowItemWindow = mutableStateOf(false)
     val fundsList = mutableStateOf(listOf<FundRealTimeInfo>())
 
-    private val fundsCode = mutableListOf("001500", "161725", "003095")
+    private val fundsCode = mutableListOf<String>()
 
     init {
         getAllFundState()
@@ -63,6 +65,11 @@ class MainViewModel {
         getFundListJob.cancel()
         getFundListJob = Job()
         GlobalScope.launch(getFundListJob + Dispatchers.IO) {
+            val localData = localSource.getFundCodes() ?: return@launch
+            fundsCode.apply {
+                clear()
+                addAll(localData)
+            }
             fundRepository.getFundList(fundsCode).collectLatest {
                 withContext(Dispatchers.Main) {
                     fundsList.value = it
@@ -75,7 +82,10 @@ class MainViewModel {
     private fun addFund(fundRealTimeInfo: FundRealTimeInfo) {
         fundsList.value = fundsList.value + listOf(fundRealTimeInfo)
         fundsCode.add(fundRealTimeInfo.fundCode)
-        getAllFundState()
+        GlobalScope.launch(job) {
+            localSource.saveFundCodes(fundsCode)
+            getAllFundState()
+        }
     }
 
     fun deleteFund(code: String) {
@@ -85,10 +95,14 @@ class MainViewModel {
         fundsCode.removeIf {
             it == code
         }
-        getAllFundState()
+        GlobalScope.launch(job) {
+            localSource.saveFundCodes(fundsCode)
+            getAllFundState()
+        }
     }
 
     fun clean() {
+        job.cancel()
         addFundJob.cancel()
         getFundListJob.cancel()
     }
