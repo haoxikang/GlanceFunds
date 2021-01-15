@@ -12,6 +12,8 @@ import local.LocalSource
 import ov.FundRealTimeInfo
 import state.Resource
 import state.Status
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 class MainViewModel {
     private var getFundListJob = Job()
@@ -119,7 +121,11 @@ class MainViewModel {
         val earnings = getTotalEstimateBalance() - getTotalActuallyBalance()
         isGain.value = earnings >= 0
         totalActuallyBalance.value = getTotalActuallyBalance().toString()
-        totalEstimateEarnings.value = earnings.toString()
+
+       val df =  DecimalFormat("0.00").apply {
+           roundingMode = RoundingMode.HALF_UP
+        }
+        totalEstimateEarnings.value = df.format(earnings)
     }
 
     private fun addFund(fundRealTimeInfo: FundRealTimeInfo) {
