@@ -12,20 +12,20 @@ class LocalSource {
     private val gson = Gson()
     private val path = "${JFileChooser().currentDirectory.toPath()}/glance_fund_data"
     private val fundCodesFileName = "fundCodes.txt"
-    suspend fun getFundCodes(): List<String>? {
+    suspend fun getFundCodes(): List<Pair<String,Float>>? {
         return withContext(Dispatchers.IO) {
             val file = File("$path/$fundCodesFileName")
             if (file.exists()) {
                 val json = file.readText()
-                val listType = object : TypeToken<List<String>>() {}.type
-                gson.fromJson<List<String>>(json, listType)
+                val listType = object : TypeToken<List<Pair<String,Float>>>() {}.type
+                gson.fromJson<List<Pair<String,Float>>>(json, listType)
             } else {
                 null
             }
         }
     }
 
-    suspend fun saveFundCodes(fundCode: List<String>) {
+    suspend fun saveFundCodes(fundCode: List<Pair<String,Float>>) {
         withContext(Dispatchers.IO) {
             val folder = File(path)
             if (!folder.exists()) {

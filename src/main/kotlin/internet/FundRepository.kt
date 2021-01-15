@@ -1,5 +1,6 @@
 package internet
 
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -12,6 +13,7 @@ class FundRepository(private val service: FundsService) {
             emit(Resource.loading(null))
             try {
                 val name = service.getFundName(fundCode)
+                name.fundUnit = mutableStateOf(0f)
                 emit(Resource.success(name))
             } catch (e: Exception) {
                 emit(Resource.error(e, null))
@@ -19,22 +21,24 @@ class FundRepository(private val service: FundsService) {
         }
     }
 
-    fun getFundList(fundCodes: List<String>): Flow<List<FundRealTimeInfo>> {
+    fun getFundList(fundCodes: List<Pair<String, Float>>): Flow<List<FundRealTimeInfo>> {
         return flow {
             while (true) {
                 try {
                     val result = fundCodes.map {
                         coroutineScope {
                             async {
-                                service.getFundTrends(it)
+                                val data = service.getFundTrends(it.first)
+                                data.fundUnit = mutableStateOf(it.second)
+                                data
                             }
                         }
                     }.awaitAll()
                     emit(result)
                 } catch (e: Exception) {
-                    //no need to handle
+                    e.printStackTrace()
                 }
-                delay(30000)
+                delay(10000)
             }
         }
     }

@@ -24,10 +24,45 @@ class MainViewModel {
     val name = mutableStateOf(Resource.loading<FundRealTimeInfo>(null))
     val fundsList = mutableStateOf(listOf<FundRealTimeInfo>())
 
-    private val fundsCode = mutableListOf<String>()
+    private val fundsCode = mutableListOf<Pair<String, Float>>()
+
+    lateinit var fundUnitStateText: MutableState<TextFieldValue>
+
+    val totalEstimateEarnings = mutableStateOf("")
+    val totalActuallyBalance = mutableStateOf("")
+    val isGain = mutableStateOf(false)
+
 
     init {
         getAllFundState()
+    }
+
+    fun onInput(textFieldValue: TextFieldValue) {
+        if (textFieldValue.text == fundUnitStateText.value.text) return
+        val text = textFieldValue.text
+        if (text.isBlank()) {
+            fundUnitStateText.value = textFieldValue
+            return
+        }
+        text.toFloatOrNull() ?: return
+        fundUnitStateText.value = textFieldValue
+    }
+
+    fun updateFundUnit(fundCode: String) {
+        fundsList.value.firstOrNull {
+            it.fundCode == fundCode
+        }?.fundUnit?.value = fundUnitStateText.value.text.toFloatOrNull() ?: 0f
+        updateEstimate()
+        GlobalScope.launch(job + Dispatchers.IO) {
+            val mutableFundsCode = fundsCode.toMutableList()
+            val index = mutableFundsCode.indexOfFirst { it.first == fundCode }
+            if (index != -1) {
+                mutableFundsCode[index] = Pair(fundCode, fundUnitStateText.value.text.toFloatOrNull() ?: 0f)
+            }
+            fundsCode.clear()
+            fundsCode.addAll(mutableFundsCode)
+            localSource.saveFundCodes(fundsCode)
+        }
     }
 
     fun updateTextFieldValue(textFieldValue: TextFieldValue) {
@@ -73,15 +108,24 @@ class MainViewModel {
             fundRepository.getFundList(fundsCode).collectLatest {
                 withContext(Dispatchers.Main) {
                     fundsList.value = it
+                    updateEstimate()
                 }
             }
         }
     }
 
 
+    private fun updateEstimate(){
+        val earnings = getTotalEstimateBalance() - getTotalActuallyBalance()
+        isGain.value = earnings >= 0
+        totalActuallyBalance.value = getTotalActuallyBalance().toString()
+        totalEstimateEarnings.value = earnings.toString()
+    }
+
     private fun addFund(fundRealTimeInfo: FundRealTimeInfo) {
         fundsList.value = fundsList.value + listOf(fundRealTimeInfo)
-        fundsCode.add(fundRealTimeInfo.fundCode)
+        fundsCode.add(Pair(fundRealTimeInfo.fundCode, 0f))
+        updateEstimate()
         GlobalScope.launch(job) {
             localSource.saveFundCodes(fundsCode)
             getAllFundState()
@@ -93,12 +137,25 @@ class MainViewModel {
             it.fundCode != code
         }
         fundsCode.removeIf {
-            it == code
+            it.first == code
         }
+        updateEstimate()
         GlobalScope.launch(job) {
             localSource.saveFundCodes(fundsCode)
             getAllFundState()
         }
+    }
+
+    private fun getTotalEstimateBalance(): Float {
+        return fundsList.value.map {
+            it.getTodayEstimateValue()
+        }.sum()
+    }
+
+    private fun getTotalActuallyBalance(): Float {
+        return fundsList.value.map {
+            it.getActuallyValue()
+        }.sum()
     }
 
     fun clean() {

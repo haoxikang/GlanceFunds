@@ -13,6 +13,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import green
+import red
 
 @Composable
 fun BottomView(viewModel: MainViewModel) {
@@ -31,15 +33,15 @@ fun BottomView(viewModel: MainViewModel) {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "-9999",
+                    text = viewModel.totalEstimateEarnings.value,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(25, 210, 126),
+                    color = if (viewModel.isGain.value) red else green,
                     fontSize = 32.sp,
                     style = TextStyle(letterSpacing = 3.sp)
                 )
                 Spacer(Modifier.preferredHeight(24.dp))
                 Text(
-                    text = "估算余额：11234",
+                    text = "估算余额：${viewModel.totalActuallyBalance.value}",
                     fontWeight = FontWeight.SemiBold,
                     color = Color(200, 200, 200),
                     fontSize = 18.sp
