@@ -7,7 +7,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -41,7 +40,7 @@ fun BottomView(viewModel: MainViewModel) {
                 )
                 Spacer(Modifier.preferredHeight(24.dp))
                 Text(
-                    text = "估算余额：${viewModel.totalActuallyBalance.value}",
+                    text = "估算余额：${viewModel.totalEstimateBalance.value}",
                     fontWeight = FontWeight.SemiBold,
                     color = Color(200, 200, 200),
                     fontSize = 18.sp

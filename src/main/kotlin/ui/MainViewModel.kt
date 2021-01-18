@@ -31,7 +31,7 @@ class MainViewModel {
     lateinit var fundUnitStateText: MutableState<TextFieldValue>
 
     val totalEstimateEarnings = mutableStateOf("")
-    val totalActuallyBalance = mutableStateOf("")
+    val totalEstimateBalance = mutableStateOf("")
     val isGain = mutableStateOf(false)
 
 
@@ -82,7 +82,11 @@ class MainViewModel {
 
     fun addANewFund() {
         val text = stateText.value.text
-        if (text.isBlank() || text in fundsCode) return
+        if (text.isBlank()) return
+        val pair = fundsCode.firstOrNull {
+            it.first == text
+        }
+        if (pair != null) return
         addFundJob.cancel()
         addFundJob = Job()
         GlobalScope.launch(addFundJob + Dispatchers.IO) {
@@ -117,13 +121,13 @@ class MainViewModel {
     }
 
 
-    private fun updateEstimate(){
+    private fun updateEstimate() {
         val earnings = getTotalEstimateBalance() - getTotalActuallyBalance()
         isGain.value = earnings >= 0
-        totalActuallyBalance.value = getTotalActuallyBalance().toString()
+        totalEstimateBalance.value = getTotalEstimateBalance().toString()
 
-       val df =  DecimalFormat("0.00").apply {
-           roundingMode = RoundingMode.HALF_UP
+        val df = DecimalFormat("0.00").apply {
+            roundingMode = RoundingMode.HALF_UP
         }
         totalEstimateEarnings.value = df.format(earnings)
     }
