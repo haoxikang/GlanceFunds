@@ -41,7 +41,7 @@ fun FundItem(viewModel: MainViewModel, info: FundRealTimeInfo) {
                 Modifier
                     .padding(start = 16.dp)
                     .wrapContentWidth()
-                    .height(56.dp),
+                    .wrapContentHeight(),
                 activeColor = blue,
                 singleLine = true,
                 textStyle = TextStyle(
