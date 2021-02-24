@@ -27,7 +27,7 @@ fun FundInfo(viewModel: MainViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clickable {
-                        FundItem(viewModel, info.name, info.fundCode)
+                        FundItem(viewModel, info)
                     }
                     .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)) {
                 Image(
